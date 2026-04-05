@@ -1,6 +1,8 @@
 {
   "name": "atlas-agent",
   "version": "1.0.0",
+  "description": "Atlas \u2014 V&DG CFO",
+  "main": "src/atlas.js",
   "scripts": {
     "start": "node src/atlas.js"
   },
