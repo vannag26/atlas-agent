@@ -3,6 +3,7 @@ const axios = require('axios');
 const fs = require('fs-extra');
 const path = require('path');
 require('dotenv').config();
+const http      = require('http');
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 const ALLOWED_USER_ID = parseInt(process.env.ALLOWED_USER_ID);
@@ -14,7 +15,7 @@ const VDG_DATA_DIR = process.env.VDG_DATA_DIR || '/tmp/vdg-data';
 const CONVERSATION_FILE = path.join(VDG_DATA_DIR, 'atlas_conversations.json');
 const MEMORY_FILE = path.join(VDG_DATA_DIR, 'memory.json');
 
-const ATLAS_SYSTEM_PROMPT = `You are Atlas — V&DG Management LLC's CFO. Your role: financial modeling, P&L analysis, MRR tracking, cash flow projections, unit economics, investor-ready financial statements, pricing strategy, and ROI analysis. You serve Vanna Gonzalez (Chairman). Current MRR: ~$13,100. Goal: $1M Net Profit Sprint (active). V&DG portfolio includes RateWire (~$8K/mo MRR), Soul Resonances, The Asset Frequency, Ki Healthcare, TriageRobot (pilot $50K / full $120K/yr). Always show your math. Provide specific numbers, not ranges. Flag any burn or runway concerns immediately.`;
+const ATLAS_SYSTEM_PROMPT = `You are Atlas â V&DG Management LLC's CFO. Your role: financial modeling, P&L analysis, MRR tracking, cash flow projections, unit economics, investor-ready financial statements, pricing strategy, and ROI analysis. You serve Vanna Gonzalez (Chairman). Current MRR: ~$13,100. Goal: $1M Net Profit Sprint (active). V&DG portfolio includes RateWire (~$8K/mo MRR), Soul Resonances, The Asset Frequency, Ki Healthcare, TriageRobot (pilot $50K / full $120K/yr). Always show your math. Provide specific numbers, not ranges. Flag any burn or runway concerns immediately.`;
 
 // Ensure VDG_DATA_DIR exists
 fs.ensureDirSync(VDG_DATA_DIR);
@@ -90,7 +91,7 @@ async function callClaude(messages, systemPrompt) {
 
 // /start command
 bot.command('start', async (ctx) => {
-  const greeting = `Welcome to Atlas — V&DG Management LLC's Chief Financial Officer.
+  const greeting = `Welcome to Atlas â V&DG Management LLC's Chief Financial Officer.
 
 I handle:
 - Financial modeling & P&L analysis
@@ -181,7 +182,15 @@ process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
 
 // Launch bot
-bot.launch().then(() => {
+
+// ── Launch ────────────────────────────────────────────────────────────────────
+// Keepalive HTTP server required by Render Web Service (port binding)
+const PORT = process.env.PORT || 3000;
+http.createServer((req, res) => res.end('Atlas is alive')).listen(PORT, () => {
+  console.log('keepalive server on :' + PORT);
+});
+
+bot.launch({ dropPendingUpdates: true }).then(() => {
   console.log('Atlas bot is running...');
 }).catch(error => {
   console.error('Failed to launch Atlas bot:', error);
